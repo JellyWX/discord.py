@@ -67,7 +67,7 @@ class ConnectionState:
         if self.message_cache:
             self.max_messages = max(0, options.get('max_messages', 5000))
         self.user_data_cache = options.get('user_data_cache', ('bot', 'username', 'avatar', 'discriminator'))
-        self.guild_data_cache = options.get('guild_data_cache', ('bot', 'username', 'avatar', 'discriminator'))
+        self.guild_data_cache = options.get('guild_data_cache', ('name', ))
 
         self.dispatch = dispatch
         self.chunker = chunker
@@ -185,7 +185,7 @@ class ConnectionState:
         try:
             return self._users[user_id]
         except KeyError:
-            user = User(state=self, data=data, cache_state=self.user_data_cache)
+            user = User(state=self, data=data)
             if user.discriminator != '0000':
                 self._users[user_id] = user
             return user
@@ -382,7 +382,7 @@ class ConnectionState:
 
         self._ready_state = ReadyState(launch=asyncio.Event(), guilds=[])
         self.clear()
-        self.user = user = ClientUser(state=self, data=data['user'], cache_state=self.user_data_cache)
+        self.user = user = ClientUser(state=self, data=data['user'])
         self._users[user.id] = user
 
         guilds = self._ready_state.guilds
@@ -783,7 +783,7 @@ class ConnectionState:
         guild = self._get_guild(int(data['guild_id']))
         if guild is not None:
             try:
-                user = User(state=self, data=data['user'], cache_state=self.user_data_cache)
+                user = User(state=self, data=data['user'])
             except KeyError:
                 pass
             else:
@@ -1054,7 +1054,7 @@ class AutoShardedConnectionState(ConnectionState):
         if not hasattr(self, '_ready_state'):
             self._ready_state = ReadyState(launch=asyncio.Event(), guilds=[])
 
-        self.user = user = ClientUser(state=self, data=data['user'], cache_state=self.user_data_cache)
+        self.user = user = ClientUser(state=self, data=data['user'])
         self._users[user.id] = user
 
         guilds = self._ready_state.guilds
