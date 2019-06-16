@@ -93,14 +93,14 @@ class BaseUser(_BaseUser):
         return self.id >> 22
 
     def _update(self, data):
-        if self._state is None:
-            data_cached = self._state.user_data_cache
+        if self._state is not None:
+            data_cache = self._state.user_data_cache
         else:
-            data_cached = ('username', 'discriminator', 'avatar', 'bot')
+            data_cache = ('username', 'avatar', 'bot')
 
         self.name = data['username'] if 'username' in data_cache else None
         self.id = int(data['id'])
-        self.discriminator = data['discriminator'] if 'discriminator' in data_cache else None
+        self.discriminator = data['discriminator']
         self.avatar = data['avatar'] if 'avatar' in data_cache else None
         self.bot = data.get('bot', False) if 'bot' in data_cache else None
 

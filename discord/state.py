@@ -66,7 +66,7 @@ class ConnectionState:
         self.message_cache = options.get('message_cache', True)
         if self.message_cache:
             self.max_messages = max(0, options.get('max_messages', 5000))
-        self.user_data_cache = options.get('user_data_cache', ('bot', 'username', 'avatar', 'discriminator'))
+        self.user_data_cache = options.get('user_data_cache', ('bot', 'username', 'avatar'))
         self.guild_data_cache = options.get('guild_data_cache', ('name', ))
 
         self.dispatch = dispatch
@@ -186,6 +186,7 @@ class ConnectionState:
             return self._users[user_id]
         except KeyError:
             user = User(state=self, data=data)
+            # don't cache deleted users
             if user.discriminator != '0000':
                 self._users[user_id] = user
             return user

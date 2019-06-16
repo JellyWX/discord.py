@@ -353,7 +353,9 @@ class Guild(Hashable):
 
         return role
 
-    def _from_data(self, guild, cache_state=('name', 'region', 'icon', 'banner', 'description')):
+    def _from_data(self, guild):
+        cache_state = self._state.guild_data_cache
+
         # according to Stan, this is always available even if the guild is unavailable
         # I don't have this guarantee when someone updates the guild.
         member_count = guild.get('member_count', None)
