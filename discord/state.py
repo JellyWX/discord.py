@@ -61,10 +61,14 @@ class ConnectionState:
     def __init__(self, *, dispatch, chunker, handlers, syncer, http, loop, **options):
         self.loop = loop
         self.http = http
+
+        self.emoji_cache = options.get('emoji_cache', True)
         self.message_cache = options.get('message_cache', True)
         if self.message_cache:
             self.max_messages = max(0, options.get('max_messages', 5000))
-        self.user_data_cache = options.get('user_data_cache', ('id', 'bot', 'username', 'avatar', 'discriminator'))
+        self.user_data_cache = options.get('user_data_cache', ('bot', 'username', 'avatar', 'discriminator'))
+        self.guild_data_cache = options.get('guild_data_cache', ('bot', 'username', 'avatar', 'discriminator'))
+
         self.dispatch = dispatch
         self.chunker = chunker
         self.syncer = syncer
@@ -190,9 +194,12 @@ class ConnectionState:
         return self._users.get(id)
 
     def store_emoji(self, guild, data):
-        emoji_id = int(data['id'])
-        self._emojis[emoji_id] = emoji = Emoji(guild=guild, state=self, data=data)
-        return emoji
+        if self.emoji_cache:
+            emoji_id = int(data['id'])
+            self._emojis[emoji_id] = emoji = Emoji(guild=guild, state=self, data=data)
+            return emoji
+        else:
+            return None
 
     @property
     def guilds(self):
@@ -656,16 +663,17 @@ class ConnectionState:
             log.warning('GUILD_MEMBER_UPDATE referencing an unknown member ID: %s. Discarding.', user_id)
 
     def parse_guild_emojis_update(self, data):
-        guild = self._get_guild(int(data['guild_id']))
-        if guild is None:
-            log.warning('GUILD_EMOJIS_UPDATE referencing an unknown guild ID: %s. Discarding.', data['guild_id'])
-            return
+        if self.emoji_cache:
+            guild = self._get_guild(int(data['guild_id']))
+            if guild is None:
+                log.warning('GUILD_EMOJIS_UPDATE referencing an unknown guild ID: %s. Discarding.', data['guild_id'])
+                return
 
-        before_emojis = guild.emojis
-        for emoji in before_emojis:
-            self._emojis.pop(emoji.id, None)
-        guild.emojis = tuple(map(lambda d: self.store_emoji(guild, d), data['emojis']))
-        self.dispatch('guild_emojis_update', guild, before_emojis, guild.emojis)
+            before_emojis = guild.emojis
+            for emoji in before_emojis:
+                self._emojis.pop(emoji.id, None)
+            guild.emojis = tuple(map(lambda d: self.store_emoji(guild, d), data['emojis']))
+            self.dispatch('guild_emojis_update', guild, before_emojis, guild.emojis)
 
     def _get_create_guild(self, data):
         if data.get('unavailable') is False:

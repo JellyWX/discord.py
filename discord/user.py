@@ -92,9 +92,9 @@ class BaseUser(_BaseUser):
     def __hash__(self):
         return self.id >> 22
 
-    def _update(self, data, cache_state):
+    def _update(self, data, cache_state=('username', 'avatar', 'discriminator', 'bot')):
         self.name = data['username'] if 'username' in cache_state else None
-        self.id = int(data['id']) if 'id' in cache_state else None
+        self.id = int(data['id'])
         self.discriminator = data['discriminator'] if 'discriminator' in cache_state else None
         self.avatar = data['avatar'] if 'avatar' in cache_state else None
         self.bot = data.get('bot', False) if 'bot' in cache_state else None

@@ -353,21 +353,27 @@ class Guild(Hashable):
 
         return role
 
-    def _from_data(self, guild):
+    def _from_data(self, guild, cache_state=('name', 'region', 'icon', 'banner', 'description')):
         # according to Stan, this is always available even if the guild is unavailable
         # I don't have this guarantee when someone updates the guild.
         member_count = guild.get('member_count', None)
         if member_count:
             self._member_count = member_count
 
-        self.name = guild.get('name')
-        self.region = try_enum(VoiceRegion, guild.get('region'))
+        def checked_grab(n, f):
+            if n in cache_state:
+                return f()
+            else:
+                return None
+
+        self.name = checked_grab('name', lambda: guild.get('name'))
+        self.region = checked_grab('region', lambda: try_enum(VoiceRegion, guild.get('region')))
         self.verification_level = try_enum(VerificationLevel, guild.get('verification_level'))
         self.default_notifications = try_enum(NotificationLevel, guild.get('default_message_notifications'))
         self.explicit_content_filter = try_enum(ContentFilter, guild.get('explicit_content_filter', 0))
         self.afk_timeout = guild.get('afk_timeout')
-        self.icon = guild.get('icon')
-        self.banner = guild.get('banner')
+        self.icon = checked_grab('icon', lambda: guild.get('icon'))
+        self.banner = checked_grab('banner', lambda: guild.get('banner'))
         self.unavailable = guild.get('unavailable', False)
         self.id = int(guild['id'])
         self._roles = {}
@@ -377,11 +383,11 @@ class Guild(Hashable):
             self._roles[role.id] = role
 
         self.mfa_level = guild.get('mfa_level')
-        self.emojis = tuple(map(lambda d: state.store_emoji(self, d), guild.get('emojis', [])))
+        self.emojis = tuple(filter(lambda e: e is not None, map(lambda d: state.store_emoji(self, d), guild.get('emojis', []))))
         self.features = guild.get('features', [])
         self.splash = guild.get('splash')
         self._system_channel_id = utils._get_as_snowflake(guild, 'system_channel_id')
-        self.description = guild.get('description')
+        self.description = checked_grab('description', lambda: guild.get('description'))
         self.max_presences = guild.get('max_presences')
         self.max_members = guild.get('max_members')
         self.premium_tier = guild.get('premium_tier', 0)
