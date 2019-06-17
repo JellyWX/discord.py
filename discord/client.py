@@ -125,8 +125,7 @@ class Client:
         Without this, many methods such as :meth:`get_message` will only return ``None``.
     user_data_cache: Optional[:class:`tuple`]
         What user attributes should be cached.
-        Defaults to ``('id', 'bot', 'username', 'avatar', 'discriminator')`` (all).
-        Without ``id``, core functionality will be lost.
+        Defaults to ``('username', 'avatar')`` (all).
     max_messages: Optional[:class:`int`]
         The maximum number of messages to store in the internal message cache.
         This defaults to 5000. Passing in ``None`` will use the default 

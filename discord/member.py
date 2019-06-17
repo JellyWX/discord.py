@@ -168,7 +168,7 @@ class Member(discord.abc.Messageable, _BaseUser):
             None: 'offline'
         }
         self.activities = tuple(map(create_activity, data.get('activities', [])))
-        self.nick = data.get('nick', None)
+        self.nick = data.get('nick', None) if 'username' in self._state.user_data_cache else None
 
     def __str__(self):
         return str(self._user)
@@ -243,7 +243,7 @@ class Member(discord.abc.Messageable, _BaseUser):
         # the nickname change is optional,
         # if it isn't in the payload then it didn't change
         try:
-            self.nick = data['nick']
+            self.nick = data['nick'] if 'username' in self._state.user_data_cache else None
         except KeyError:
             pass
 
@@ -350,8 +350,8 @@ class Member(discord.abc.Messageable, _BaseUser):
     def mention(self):
         """:class:`str`: Returns a string that allows you to mention the member."""
         if self.nick:
-            return '<@!%s>' % self.id
-        return '<@%s>' % self.id
+            return '<@!{}>'.format(self.id)
+        return '<@{}>'.format(self.id)
 
     @property
     def display_name(self):
