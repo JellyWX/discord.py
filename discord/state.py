@@ -845,8 +845,10 @@ class ConnectionState:
                 guild._add_member(member)
 
         self.process_listeners(ListenerType.chunk, guild, len(members))
-        names = [x.name.lower() for x in members]
-        self.process_listeners(ListenerType.query_members, (guild_id, names), members)
+
+        if 'username' in self.user_data_cache:
+            names = [x.name.lower() for x in members]
+            self.process_listeners(ListenerType.query_members, (guild_id, names), members)
 
     def parse_guild_integrations_update(self, data):
         guild = self._get_guild(int(data['guild_id']))
